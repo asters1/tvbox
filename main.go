@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -257,4 +258,13 @@ func InitConfig() {
 
 func main() {
 	InitConfig()
+	if len(os.Args) == 1 {
+		fmt.Println("请输入测试的py文件!!!")
+		return
+	}
+	file_path := os.Args[1]
+	fmt.Println("你测试的文件是===>" + file_path)
+	if search_switch {
+	} else {
+	}
 }
