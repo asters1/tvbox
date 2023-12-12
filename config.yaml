@@ -1,6 +1,6 @@
 #外部字符串
 extend:
-  http://ys.qtw.asia/lvdou_api.php/v1.vod
+  'http://ys.qtw.asia/lvdou_api.php/v1.vod'
   #筛选开关
 filter_switch:
   true
@@ -21,7 +21,7 @@ test_type_index:
   0
   #测试category的页数从1开始
 test_category_page:
-  1
+  '1'
   #测试的视频下标，从0开始
 test_vod_index:
   2
