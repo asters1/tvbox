@@ -13,6 +13,7 @@ import (
 	"github.com/go-yaml/yaml"
 	"github.com/tidwall/gjson"
 )
+import "strconv"
 
 var (
 	extend              string
@@ -50,9 +51,9 @@ func Go_Init() string {
 }
 
 //export Go_HomeContent
-func Go_HomeContent(etd *C.char, filter C.bool, file_name *C.char) string {
+func Go_HomeContent(etd *C.char, filter bool, file_name *C.char) *C.char {
 	c_etd := C.GoString(etd)
-	c_filter := C.GoBool(filter)
+	c_filter := filter
 	c_file_name := C.GoString(file_name)
 
 	M := make(map[string]interface{})
@@ -79,9 +80,9 @@ func Go_HomeContent(etd *C.char, filter C.bool, file_name *C.char) string {
 	}
 	jstr, err := json.Marshal(M)
 	if err != nil {
-		return "{\"code\":0,\"message\":\"格式化json出错，请检查!!!函数名为Go_HomeContent!!\",\"data\":\"\"}"
+		return C.CString("{\"code\":0,\"message\":\"格式化json出错，请检查!!!函数名为Go_HomeContent!!\",\"data\":\"\"}")
 	} else {
-		return string(jstr)
+		return C.CString(string(jstr))
 	}
 }
 
@@ -278,11 +279,19 @@ func main() {
 	fmt.Println("你测试的文件是===>" + file_path)
 	if search_switch {
 	} else {
-		res_homeContent := Go_HomeContent(extend, filter_switch, file_path)
+		res_homeContent := C.GoString(Go_HomeContent(C.CString(extend), filter_switch, C.CString(file_path)))
+		// fmt.Println(res_homeContent)
 		if gjson.Get(res_homeContent, "code").Int() == 1 {
-			fmt.Println(gjson.Get(res_homeContent, "message"))
+			fmt.Println("\n=======homeContent=======\n")
+			res_data := gjson.Get(res_homeContent, "data").String()
+			for i := 0; i < len(gjson.Get(res_data, "class").Array()); i++ {
+				// fmt.Println(res_data)
+				fmt.Print(gjson.Get(res_data, "class."+strconv.Itoa(i)+".type_name"))
+				fmt.Print("[" + gjson.Get(res_data, "class."+strconv.Itoa(i)+".type_name").String() + "] ")
+			}
 		} else {
 			os.Exit(0)
 		}
 	}
+	fmt.Println("\n")
 }
