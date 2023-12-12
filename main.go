@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/go-yaml/yaml"
@@ -51,9 +52,11 @@ func Go_HomeContent(etd string, filter bool, file_name string) string {
 	if filter {
 		flr = "True"
 	}
+	head, file_name := filepath.Split(file_name)
 	File_Name_Remove_py := strings.TrimSuffix(file_name, ".py")
-	fmt.Println("python3", "-c", "from "+File_Name_Remove_py+" import homeContent,init;init(\""+etd+"\");homeContent("+flr+")")
-	cmd := exec.Command("python3", "-c", "from "+File_Name_Remove_py+" import homeContent,init;init(\""+etd+"\");homeContent("+flr+")")
+	// fmt.Println("python3", "-c", "from "+File_Name_Remove_py+" import homeContent,init;init(\""+etd+"\");homeContent("+flr+")")
+	// fmt.Println("python3", "-c", "import sys;sys.path.append('"+head+"');from "+File_Name_Remove_py+" import homeContent,init;init(\""+etd+"\");homeContent("+flr+")")
+	cmd := exec.Command("python3", "-c", "import sys;sys.path.append('"+head+"');from "+File_Name_Remove_py+" import homeContent,init;init(\""+etd+"\");homeContent("+flr+")")
 	content, err := cmd.Output()
 	if err != nil {
 		M["code"] = 0
@@ -79,8 +82,9 @@ func Go_CategoryContent(etd string, tid string, pg string, filter bool, extend s
 	if filter {
 		flr = "True"
 	}
+	head, file_name := filepath.Split(file_name)
 	File_Name_Remove_py := strings.TrimSuffix(file_name, ".py")
-	cmd := exec.Command("python3", "-c", "from "+File_Name_Remove_py+" import categoryContent,init;init(\""+etd+"\");;categoryContent(\""+tid+"\",\""+pg+"\","+flr+",\""+extend+"\")")
+	cmd := exec.Command("python3", "-c", "import sys;sys.path.append('"+head+"');from "+File_Name_Remove_py+" import categoryContent,init;init(\""+etd+"\");;categoryContent(\""+tid+"\",\""+pg+"\","+flr+",\""+extend+"\")")
 	content, err := cmd.Output()
 	if err != nil {
 		M["code"] = 0
@@ -102,8 +106,9 @@ func Go_CategoryContent(etd string, tid string, pg string, filter bool, extend s
 
 func Go_DetailContent(etd string, ids string, file_name string) string {
 	M := make(map[string]interface{})
+	head, file_name := filepath.Split(file_name)
 	File_Name_Remove_py := strings.TrimSuffix(file_name, ".py")
-	cmd := exec.Command("python3", "-c", "from "+File_Name_Remove_py+" import detailContent,init;init(\""+etd+"\");;detailContent(\""+ids+"\")")
+	cmd := exec.Command("python3", "-c", "import sys;sys.path.append('"+head+"');from "+File_Name_Remove_py+" import detailContent,init;init(\""+etd+"\");;detailContent(\""+ids+"\")")
 	content, err := cmd.Output()
 	if err != nil {
 		M["code"] = 0
@@ -125,8 +130,9 @@ func Go_DetailContent(etd string, ids string, file_name string) string {
 
 func Go_SearchContent(etd string, key string, file_name string) string {
 	M := make(map[string]interface{})
+	head, file_name := filepath.Split(file_name)
 	File_Name_Remove_py := strings.TrimSuffix(file_name, ".py")
-	cmd := exec.Command("python3", "-c", "from "+File_Name_Remove_py+" import searchContent,init;init(\""+etd+"\");;searchContent(\""+key+"\")")
+	cmd := exec.Command("python3", "-c", "import sys;sys.path.append('"+head+"');from "+File_Name_Remove_py+" import searchContent,init;init(\""+etd+"\");;searchContent(\""+key+"\")")
 	content, err := cmd.Output()
 	if err != nil {
 		M["code"] = 0
@@ -148,8 +154,9 @@ func Go_SearchContent(etd string, key string, file_name string) string {
 
 func Go_PlayerContent(etd string, flag string, id string, file_name string) string {
 	M := make(map[string]interface{})
+	head, file_name := filepath.Split(file_name)
 	File_Name_Remove_py := strings.TrimSuffix(file_name, ".py")
-	cmd := exec.Command("python3", "-c", "from "+File_Name_Remove_py+" import playerContent,init;init(\""+etd+"\");;playerContent(\""+flag+"\",\""+id+"\")")
+	cmd := exec.Command("python3", "-c", "import sys;sys.path.append('"+head+"');from "+File_Name_Remove_py+" import playerContent,init;init(\""+etd+"\");;playerContent(\""+flag+"\",\""+id+"\")")
 	content, err := cmd.Output()
 	if err != nil {
 		M["code"] = 0
@@ -250,6 +257,6 @@ func InitConfig() {
 
 func main() {
 	InitConfig()
-	c := Go_HomeContent(extend, true, "a.py")
+	c := Go_HomeContent(extend, true, "./python/a.py")
 	fmt.Println(c)
 }
