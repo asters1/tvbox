@@ -1,2 +1,3 @@
 #!/bin/bash
-go build && ./TvBox "./python/a.py"
+# python3 ./NanGua.py
+go build && ./TvBox "./NanGua.py"

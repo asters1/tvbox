@@ -1,6 +1,7 @@
 package main
 
 import (
+	"C"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -10,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/go-yaml/yaml"
+	"github.com/tidwall/gjson"
 )
 
 var (
@@ -47,25 +49,31 @@ func Go_Init() string {
 	}
 }
 
-func Go_HomeContent(etd string, filter bool, file_name string) string {
+//export Go_HomeContent
+func Go_HomeContent(etd *C.char, filter C.bool, file_name *C.char) string {
+	c_etd := C.GoString(etd)
+	c_filter := C.GoBool(filter)
+	c_file_name := C.GoString(file_name)
+
 	M := make(map[string]interface{})
 	flr := "False"
-	if filter {
+	if c_filter {
 		flr = "True"
 	}
-	head, file_name := filepath.Split(file_name)
-	File_Name_Remove_py := strings.TrimSuffix(file_name, ".py")
+	head, c_file_name := filepath.Split(c_file_name)
+	File_Name_Remove_py := strings.TrimSuffix(c_file_name, ".py")
 	// fmt.Println("python3", "-c", "from "+File_Name_Remove_py+" import homeContent,init;init(\""+etd+"\");homeContent("+flr+")")
 	// fmt.Println("python3", "-c", "import sys;sys.path.append(\""+head+"\");from "+File_Name_Remove_py+" import homeContent,init;init(\""+etd+"\");homeContent("+flr+")")
-	cmd := exec.Command("python3", "-c", "import sys;sys.path.append(\""+head+"\");from "+File_Name_Remove_py+" import homeContent,init;init(\""+etd+"\");homeContent("+flr+")")
+	cmd := exec.Command("python3", "-c", "import sys;sys.path.append(\""+head+"\");from "+File_Name_Remove_py+" import homeContent,init;init(\""+c_etd+"\");homeContent("+flr+")")
 	content, err := cmd.Output()
 	if err != nil {
 		M["code"] = 0
 		M["message"] = "homeContent运行出错，请检查!!!"
 		M["data"] = err.Error()
+		fmt.Printf("%v\n", cmd)
 
 	} else {
-		M["code"] = 0
+		M["code"] = 1
 		M["message"] = "success"
 		M["data"] = strings.TrimSpace(string(content))
 	}
@@ -91,6 +99,7 @@ func Go_CategoryContent(etd string, tid string, pg string, filter bool, extend s
 		M["code"] = 0
 		M["message"] = "categoryContent运行出错，请检查!!!"
 		M["data"] = err.Error()
+		fmt.Printf("%v\n", cmd)
 
 	} else {
 		M["code"] = 0
@@ -115,6 +124,7 @@ func Go_DetailContent(etd string, ids string, file_name string) string {
 		M["code"] = 0
 		M["message"] = "detailContent运行出错，请检查!!!"
 		M["data"] = err.Error()
+		fmt.Printf("%v\n", cmd)
 
 	} else {
 		M["code"] = 0
@@ -139,6 +149,7 @@ func Go_SearchContent(etd string, key string, file_name string) string {
 		M["code"] = 0
 		M["message"] = "searchContent运行出错，请检查!!!"
 		M["data"] = err.Error()
+		fmt.Printf("%v\n", cmd)
 
 	} else {
 		M["code"] = 0
@@ -163,6 +174,7 @@ func Go_PlayerContent(etd string, flag string, id string, file_name string) stri
 		M["code"] = 0
 		M["message"] = "playerContent运行出错，请检查!!!"
 		M["data"] = err.Error()
+		fmt.Printf("%v\n", cmd)
 
 	} else {
 		M["code"] = 0
@@ -266,5 +278,11 @@ func main() {
 	fmt.Println("你测试的文件是===>" + file_path)
 	if search_switch {
 	} else {
+		res_homeContent := Go_HomeContent(extend, filter_switch, file_path)
+		if gjson.Get(res_homeContent, "code").Int() == 1 {
+			fmt.Println(gjson.Get(res_homeContent, "message"))
+		} else {
+			os.Exit(0)
+		}
 	}
 }
