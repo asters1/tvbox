@@ -269,6 +269,71 @@ func InitConfig() {
 	}
 }
 
+func debug_homeContent(file_path string) (string, string) {
+	resurl_filter := ""
+	res_homeContent := C.GoString(Go_HomeContent(C.CString(extend), filter_switch, C.CString(file_path)))
+	if gjson.Get(res_homeContent, "code").Int() == 1 {
+		tid := ""
+		type_name := ""
+		fmt.Println("\n=======homeContent=======\n")
+		res_data := gjson.Get(res_homeContent, "data").String()
+		if res_data == "" {
+			fmt.Println("homeContent返回为空")
+			os.Exit(0)
+		}
+		for i := 0; i < len(gjson.Get(res_data, "class").Array()); i++ {
+			// fmt.Println(res_data)
+			tn := gjson.Get(res_data, "class."+strconv.Itoa(i)+".type_name").String()
+			ti := gjson.Get(res_data, "class."+strconv.Itoa(i)+".type_id").String()
+			if tn == "" || ti == "" {
+				fmt.Println("没有检测到type_id或者type_name!!请检查")
+				os.Exit(0)
+			}
+			fmt.Print(tn + "[" + ti + "] ")
+			if i == test_type_index {
+				tid = gjson.Get(res_data, "class."+strconv.Itoa(i)+".type_id").String()
+				type_name = gjson.Get(res_data, "class."+strconv.Itoa(i)+".type_name").String()
+			}
+		}
+		fmt.Println("\n")
+		if filter_switch {
+			fmt.Println("筛选开关已开启!\n")
+			// fmt.Println(gjson.Get(res_data, "class").Raw)
+			for i := 0; i < len(gjson.Get(res_data, "class").Array()); i++ {
+				// fmt.Println(i)
+				ti := gjson.Get(res_data, "class."+strconv.Itoa(i)+".type_id").String()
+				res_data_filter := gjson.Get(res_data, "filter."+ti).Array()
+
+				for j := 0; j < len(res_data_filter); j++ {
+
+					// fmt.Println(j)
+					fmt.Print(gjson.Get(res_data_filter[j].String(), "name").String() + " ")
+					f_value := gjson.Get(res_data_filter[j].String(), "value").Array()
+					for k := 0; k < len(f_value); k++ {
+
+						n := gjson.Get(f_value[k].String(), "n").String()
+						v := gjson.Get(f_value[k].String(), "v").String()
+						fmt.Print(n + " ")
+						if j == filter_type_index && k == filter_num_index {
+
+							resurl_filter = "{\"" + gjson.Get(res_data_filter[j].String(), "key").String() + "\":\"" + v + "\"}"
+						}
+					}
+					fmt.Println()
+				}
+			}
+
+		}
+		fmt.Println("\n你测试的类型是->" + type_name + "[" + tid + "]")
+		fmt.Println("\n你测试的筛选是->" + resurl_filter)
+
+		return tid, resurl_filter
+	} else {
+		os.Exit(0)
+	}
+	return "", ""
+}
+
 func main() {
 	InitConfig()
 	if len(os.Args) == 1 {
@@ -279,19 +344,7 @@ func main() {
 	fmt.Println("你测试的文件是===>" + file_path)
 	if search_switch {
 	} else {
-		res_homeContent := C.GoString(Go_HomeContent(C.CString(extend), filter_switch, C.CString(file_path)))
-		// fmt.Println(res_homeContent)
-		if gjson.Get(res_homeContent, "code").Int() == 1 {
-			fmt.Println("\n=======homeContent=======\n")
-			res_data := gjson.Get(res_homeContent, "data").String()
-			for i := 0; i < len(gjson.Get(res_data, "class").Array()); i++ {
-				// fmt.Println(res_data)
-				fmt.Print(gjson.Get(res_data, "class."+strconv.Itoa(i)+".type_name"))
-				fmt.Print("[" + gjson.Get(res_data, "class."+strconv.Itoa(i)+".type_name").String() + "] ")
-			}
-		} else {
-			os.Exit(0)
-		}
+		debug_homeContent(file_path)
 	}
 	fmt.Println("\n")
 }
