@@ -13,7 +13,9 @@ import (
 	"github.com/go-yaml/yaml"
 	"github.com/tidwall/gjson"
 )
-import "strconv"
+import (
+	"strconv"
+)
 
 var (
 	extend              string
@@ -50,6 +52,7 @@ func Go_Init() string {
 	}
 }
 
+//解析homeContent
 //export Go_HomeContent
 func Go_HomeContent(etd *C.char, filter bool, file_name *C.char) *C.char {
 	c_etd := C.GoString(etd)
@@ -86,15 +89,21 @@ func Go_HomeContent(etd *C.char, filter bool, file_name *C.char) *C.char {
 	}
 }
 
-func Go_CategoryContent(etd string, tid string, pg string, filter bool, extend string, file_name string) string {
+func Go_CategoryContent(etd *C.char, tid *C.char, pg *C.char, filter bool, extend *C.char, file_name *C.char) *C.char {
+	c_etd := C.GoString(etd)
+	c_tid := C.GoString(tid)
+	c_pg := C.GoString(pg)
+	c_extend := C.GoString(extend)
+	c_filter := filter
+	c_file_name := C.GoString(file_name)
 	M := make(map[string]interface{})
 	flr := "False"
-	if filter {
+	if c_filter {
 		flr = "True"
 	}
-	head, file_name := filepath.Split(file_name)
-	File_Name_Remove_py := strings.TrimSuffix(file_name, ".py")
-	cmd := exec.Command("python3", "-c", "import sys;sys.path.append(\""+head+"\");from "+File_Name_Remove_py+" import categoryContent,init;init(\""+etd+"\");categoryContent(\""+tid+"\",\""+pg+"\","+flr+",\""+extend+"\")")
+	head, c_file_name := filepath.Split(c_file_name)
+	File_Name_Remove_py := strings.TrimSuffix(c_file_name, ".py")
+	cmd := exec.Command("python3", "-c", "import sys;sys.path.append(\""+head+"\");from "+File_Name_Remove_py+" import categoryContent,init;init(\""+c_etd+"\");categoryContent(\""+c_tid+"\",\""+c_pg+"\","+flr+",\""+c_extend+"\")")
 	content, err := cmd.Output()
 	if err != nil {
 		M["code"] = 0
@@ -109,9 +118,9 @@ func Go_CategoryContent(etd string, tid string, pg string, filter bool, extend s
 	}
 	jstr, err := json.Marshal(M)
 	if err != nil {
-		return "{\"code\":0,\"message\":\"格式化json出错，请检查!!!函数名为Go_CategoryContent!!\",\"data\":\"\"}"
+		return C.CString("{\"code\":0,\"message\":\"格式化json出错，请检查!!!函数名为Go_CategoryContent!!\",\"data\":\"\"}")
 	} else {
-		return string(jstr)
+		return C.CString(string(jstr))
 	}
 }
 
@@ -271,6 +280,7 @@ func InitConfig() {
 
 func debug_homeContent(file_path string) (string, string) {
 	resurl_filter := ""
+	f_name := ""
 	res_homeContent := C.GoString(Go_HomeContent(C.CString(extend), filter_switch, C.CString(file_path)))
 	if gjson.Get(res_homeContent, "code").Int() == 1 {
 		tid := ""
@@ -316,7 +326,8 @@ func debug_homeContent(file_path string) (string, string) {
 						fmt.Print(n + " ")
 						if j == filter_type_index && k == filter_num_index {
 
-							resurl_filter = "{\"" + gjson.Get(res_data_filter[j].String(), "key").String() + "\":\"" + v + "\"}"
+							resurl_filter = "{\\\"" + gjson.Get(res_data_filter[j].String(), "key").String() + "\\\":\\\"" + v + "\\\"}"
+							f_name = "[" + gjson.Get(res_data_filter[j].String(), "name").String() + ":" + n + "]"
 						}
 					}
 					fmt.Println()
@@ -325,13 +336,19 @@ func debug_homeContent(file_path string) (string, string) {
 
 		}
 		fmt.Println("\n你测试的类型是->" + type_name + "[" + tid + "]")
-		fmt.Println("\n你测试的筛选是->" + resurl_filter)
+		fmt.Println("\n你测试的筛选是:" + f_name + "->" + strings.ReplaceAll(resurl_filter, "\\", ""))
 
 		return tid, resurl_filter
 	} else {
 		os.Exit(0)
 	}
 	return "", ""
+}
+func debug_categoryContent(tid string, pg string, json_filter string, file_path string) {
+
+	res_categoryContent := C.GoString(Go_CategoryContent(C.CString(extend), C.CString(tid), C.CString(pg), filter_switch, C.CString(json_filter), C.CString(file_path)))
+	fmt.Println(gjson.Get(res_categoryContent, "data"))
+
 }
 
 func main() {
@@ -344,7 +361,9 @@ func main() {
 	fmt.Println("你测试的文件是===>" + file_path)
 	if search_switch {
 	} else {
-		debug_homeContent(file_path)
+		tid, json_filter := debug_homeContent(file_path)
+		// fmt.Println(tid, filter)
+		debug_categoryContent(tid, test_category_page, json_filter, file_path)
 	}
 	fmt.Println("\n")
 }
