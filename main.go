@@ -126,11 +126,14 @@ func Go_CategoryContent(etd *C.char, tid *C.char, pg *C.char, filter bool, exten
 	}
 }
 
-func Go_DetailContent(etd string, ids string, file_name string) string {
+func Go_DetailContent(etd *C.char, ids *C.char, file_name *C.char) *C.char {
+	c_etd := C.GoString(etd)
+	c_ids := C.GoString(ids)
+	c_file_name := C.GoString(file_name)
 	M := make(map[string]interface{})
-	head, file_name := filepath.Split(file_name)
-	File_Name_Remove_py := strings.TrimSuffix(file_name, ".py")
-	cmd := exec.Command("python3", "-c", "import sys;sys.path.append(\""+head+"\");from "+File_Name_Remove_py+" import detailContent,init;init(\""+etd+"\");detailContent(\""+ids+"\")")
+	head, c_file_name := filepath.Split(c_file_name)
+	File_Name_Remove_py := strings.TrimSuffix(c_file_name, ".py")
+	cmd := exec.Command("python3", "-c", "import sys;sys.path.append(\""+head+"\");from "+File_Name_Remove_py+" import detailContent,init;init(\""+c_etd+"\");detailContent(\""+c_ids+"\")")
 	content, err := cmd.Output()
 	if err != nil {
 		M["code"] = 0
@@ -145,9 +148,9 @@ func Go_DetailContent(etd string, ids string, file_name string) string {
 	}
 	jstr, err := json.Marshal(M)
 	if err != nil {
-		return "{\"code\":0,\"message\":\"格式化json出错，请检查!!!函数名为Go_DetailContent!!\",\"data\":\"\"}"
+		return C.CString("{\"code\":0,\"message\":\"格式化json出错，请检查!!!函数名为Go_DetailContent!!\",\"data\":\"\"}")
 	} else {
-		return string(jstr)
+		return C.CString(string(jstr))
 	}
 }
 
@@ -409,13 +412,39 @@ func debug_categoryContent(tid string, pg string, json_filter string, file_path 
 	fmt.Println("\n你测试的视频是->" + ids + "[" + ids_name + "]")
 	return ids
 }
-func debug_searchContent(key string, file_path string) {
-	// res_categoryContent := C.GoString(Go_CategoryContent(C.CString(extend), C.CString(tid), C.CString(pg), filter_switch, C.CString(json_filter), C.CString(file_path)))
-	res_searchContent := C.GoString(Go_SearchContent(C.CString(extend), C.CString(key), C.CString(file_path)))
-	fmt.Println(res_searchContent)
 
+func debug_searchContent(key string, file_path string) string {
+	ids := ""
+	ids_name := ""
+	fmt.Println("\n你测试的搜索关键字是->" + key)
+	fmt.Println("\n=======searchContent=======\n")
+	res_searchContent := C.GoString(Go_SearchContent(C.CString(extend), C.CString(key), C.CString(file_path)))
+	res_data := gjson.Get(res_searchContent, "data").String()
+	if res_data == "" {
+		fmt.Println("searchContent返回为空")
+		os.Exit(0)
+	}
+	// fmt.Println(res_data)
+	list := gjson.Get(res_data, "list").Array()
+	for i := 0; i < len(list); i++ {
+		vod_name := gjson.Get(list[i].String(), "vod_name").String()
+		vod_id := gjson.Get(list[i].String(), "vod_id").String()
+		fmt.Println(vod_name + "[" + vod_id + "]")
+
+		if test_vod_index == i {
+			ids = vod_id
+			ids_name = vod_name
+		}
+	}
+	fmt.Println("\n你测试的视频是->" + ids + "[" + ids_name + "]")
+	return ids
 }
-func debug_detailContent(ids string) {}
+
+func debug_detailContent(ids string, file_path string) {
+	fmt.Println(ids)
+	res_detailContent := C.GoString(Go_DetailContent(C.CString(extend), C.CString(ids), C.CString(file_path)))
+	fmt.Println(res_detailContent)
+}
 
 func main() {
 	InitConfig()
@@ -424,16 +453,17 @@ func main() {
 		return
 	}
 	file_path := os.Args[1]
+	ids := ""
 	fmt.Println("你测试的文件是===>" + file_path)
 	if search_switch {
-		debug_searchContent(search_keyword, file_path)
+		ids = debug_searchContent(search_keyword, file_path)
 	} else {
 
 		tid, json_filter := debug_homeContent(file_path)
 		// fmt.Println(tid, filter)
-		ids := debug_categoryContent(tid, test_category_page, json_filter, file_path)
-		debug_detailContent(ids)
+		ids = debug_categoryContent(tid, test_category_page, json_filter, file_path)
 
 	}
+	debug_detailContent(ids, file_path)
 	fmt.Println("\n")
 }

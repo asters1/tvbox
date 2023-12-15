@@ -1,11 +1,22 @@
 import requests
+import hashlib
 import json
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
+from urllib.parse import quote
 import sys
 import sys
+import time
 
 extend=""
+appVersionCode = "9"
+appVersionName = "1.0.9"
+deviceModel="M2012K11AC"
+deviceVersion="14"
+deviceBrand="Redmi"
+
+
+
 def init(etd):
     global extend
     extend=etd
@@ -73,9 +84,57 @@ def categoryContent(tid,pg,filter,extend):
 
         
 def detailContent(ids):
-    print("{}")
+    ti=GetTime()
+    url="http://ys.changmengyun.com/api.php/provide/vod_detail?appVersionName="+appVersionName+"&imei=&time="+ti+"&id="+ids+"&deviceScreen=2340*1080&appVersionCode="+appVersionCode+"&deviceModel"+deviceModel+"&app=ylys&deviceBrand="+deviceBrand+"&devices=android&deviceVersion="+deviceVersion
+    res=requests.get(url,headers=GetNGHeaders(ti)).text
+    json_res=json.loads(res)
+    data_obj=json_res["data"]
+    player_info_array=data_obj["player_info"]
+    # print(player_info_array)
+    play_url_list=[]
+    play_from_array=[]
+    for v_obj in player_info_array:
+        play_from_array.append(v_obj["show"])
+        u_array=v_obj["video_info"]
+        url_list=[]
+        for u in u_array:
+            url_list.append(u["name"]+"$"+u["url"][0])
+        # print(url_list)
+        play_url_list.append("#".join(url_list))
+        # print(play_url_list)
+
+    vod_obj={
+        "vod_id":ids,
+        "vod_name":data_obj["name"],
+        "vod_pic":data_obj["img"],
+        "type_name":data_obj["type"],
+        "vod_year":data_obj["year"],
+        "vod_remarks":data_obj["msg"],
+        "vod_content":data_obj["info"],
+        "vod_play_from":"$$$".join(play_from_array),
+        "vod_play_url":"$$$".join(play_url_list)
+            }
+    print(vod_obj)
+
 def searchContent(key):
-    print("{}")
+    list=[]
+    ti=GetTime()
+    url="http://ys.changmengyun.com/api.php/provide/search_result?video_name="+quote(key)+"&appVersionName="+appVersionName+"&imei=&time="+ti+"&deviceScreen=2340*1080&appVersionCode="+appVersionCode+"&deviceModel="+deviceModel+"&devices=android&deviceVersion="+deviceVersion
+    res=requests.get(url,headers=GetNGHeaders(ti)).text
+    json_res=json.loads(res)
+    arrayres=json_res["data"][0]["data"]
+    for item in arrayres:
+        vod={
+            "vod_id":str(item["id"]),
+            "vod_name":item["video_name"],
+            "vod_pic":item["img"],
+            "vod_remarks":item["category"]
+                }
+        list.append(vod)
+    result={"list":list}
+    # print(result)
+    jstr=json.dumps(result,ensure_ascii=False)
+    print(jstr)
 def playerContent(flag ,id):
     print("{}")
     # homeContent(True)
@@ -84,6 +143,24 @@ def playerContent(flag ,id):
 
 
 #===============自定义函数
+def GetNGHeaders(ti):
+    headers={
+        "user-agent":"okhttp/3.12.0",
+        "version_name":appVersionName,
+        "version_code":appVersionCode,
+        "sign":GetMd5("#uBFszdEM0oL0JRn@"+ti),
+        "timeMillis":ti
+            }
+    return headers
+
+def GetMd5(text):
+    md5=hashlib.md5()
+    md5.update(text.encode("utf-8"))
+    return md5.hexdigest()
+def GetTime():
+    t=str(int(time.time()*1000))
+    return t
+
 def Completion(str1,str2):
     result=""
     parse=urlparse(str1)
@@ -122,3 +199,5 @@ def GetTXFiltter():
 # GetTXFiltter()
 # homeContent(True)
 # categoryContent("TX",2,True,'{"iyear":"1"}')
+# searchContent("汪汪")
+detailContent("131009")
