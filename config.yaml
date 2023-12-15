@@ -12,7 +12,7 @@ filter_num_index:
   1
   #搜索开关
 search_switch:
-  false
+  true
   #搜索关键字
 search_keyword:
   汪汪
