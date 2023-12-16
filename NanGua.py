@@ -48,10 +48,10 @@ def categoryContent(tid,pg,filter,extend):
     result={}
     if(tid=="TX"):
         SX=""
-        json_filter=json.loads(extend)
-        for k,v in json_filter.items():
-            # print(f)
-            SX=SX+"&"+k+"="+v
+        if not extend=="":
+            json_filter=json.loads(extend)
+            for k,v in json_filter.items():
+                SX=SX+"&"+k+"="+v
         url="https://v.qq.com/x/bu/pagesheet/list?_all=1&append=1&channel=child&listpage=1&offset="+str(((int(pg) - 1) * 21))+"&pagesize=21&sort=75"+SX;
         res_content=requests.get(url,GetHeaders()).text.encode("iso-8859-1").decode("utf-8")
         sp=BeautifulSoup(res_content,features="html.parser")
@@ -213,3 +213,4 @@ def GetTXFiltter():
     # jstr=json.dumps(TX,ensure_ascii=False)
     return TX
 
+categoryContent("TX","1",True,"")
