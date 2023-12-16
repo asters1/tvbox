@@ -114,7 +114,11 @@ def detailContent(ids):
         "vod_play_from":"$$$".join(play_from_array),
         "vod_play_url":"$$$".join(play_url_list)
             }
-    print(vod_obj)
+    result={
+            "list":[vod_obj]
+            }
+    jstr=json.dumps(result,ensure_ascii=False)
+    print(jstr)
 
 def searchContent(key):
     list=[]

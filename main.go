@@ -440,10 +440,124 @@ func debug_searchContent(key string, file_path string) string {
 	return ids
 }
 
-func debug_detailContent(ids string, file_path string) {
-	fmt.Println(ids)
+func debug_detailContent(ids string, file_path string) (string, string) {
+	flag := ""
+	uid := ""
+	fmt.Println("\n==========detailContent:=======\n")
 	res_detailContent := C.GoString(Go_DetailContent(C.CString(extend), C.CString(ids), C.CString(file_path)))
-	fmt.Println(res_detailContent)
+	res_data := gjson.Get(res_detailContent, "data").String()
+	if res_data == "" {
+		fmt.Println("detailContent返回为空")
+		os.Exit(0)
+	}
+	// fmt.Println(res_data)
+	vod := gjson.Get(res_data, "list").Array()[0].String()
+	vod_id := gjson.Get(vod, "vod_id").String()
+	vod_name := gjson.Get(vod, "vod_name").String()
+	vod_pic := gjson.Get(vod, "vod_pic").String()
+	type_name := gjson.Get(vod, "type_name").String()
+	vod_year := gjson.Get(vod, "vod_year").String()
+	vod_area := gjson.Get(vod, "vod_area").String()
+	vod_remarks := gjson.Get(vod, "vod_remarks").String()
+	vod_actor := gjson.Get(vod, "vod_actor").String()
+	vod_director := gjson.Get(vod, "vod_director").String()
+	vod_content := gjson.Get(vod, "vod_content").String()
+	vod_play_from := gjson.Get(vod, "vod_play_from").String()
+	vod_play_url := gjson.Get(vod, "vod_play_url").String()
+	fmt.Println("//视频ID(vod_id)")
+	if vod_id == "" {
+		fmt.Println("未定义")
+	} else {
+		fmt.Println(vod_id)
+	}
+	fmt.Println("\n//视频名称(vod_name)")
+	if vod_name == "" {
+		fmt.Println("未定义")
+	} else {
+		fmt.Println(vod_name)
+	}
+	fmt.Println("\n//视频封面(vod_pic)")
+	if vod_pic == "" {
+		fmt.Println("未定义")
+	} else {
+		fmt.Println(vod_pic)
+	}
+	fmt.Println("\n//类型(type_name)")
+	if type_name == "" {
+		fmt.Println("未定义")
+	} else {
+		fmt.Println(type_name)
+	}
+	fmt.Println("\n//年份(vod_year)")
+	if vod_year == "" {
+		fmt.Println("未定义")
+	} else {
+		fmt.Println(vod_year)
+	}
+	fmt.Println("\n//地区(vod_area)")
+	if vod_area == "" {
+		fmt.Println("未定义")
+	} else {
+		fmt.Println(vod_area)
+	}
+	fmt.Println("\n//提示信息(vod_remarks)")
+	if vod_remarks == "" {
+		fmt.Println("未定义")
+	} else {
+		fmt.Println(vod_remarks)
+	}
+	fmt.Println("\n//主演(vod_actor)")
+	if vod_actor == "" {
+		fmt.Println("未定义")
+	} else {
+		fmt.Println(vod_actor)
+	}
+	fmt.Println("\n//导演(vod_director)")
+	if vod_director == "" {
+		fmt.Println("未定义")
+	} else {
+		fmt.Println(vod_director)
+	}
+	fmt.Println("\n//简介(vod_content)")
+	if vod_content == "" {
+		fmt.Println("未定义")
+	} else {
+		fmt.Println(vod_content)
+	}
+	fmt.Println("\n//播放源(vod_play_from)")
+	if vod_play_from == "" {
+		fmt.Println("未定义")
+		os.Exit(0)
+	} else {
+		pf := strings.Split(vod_play_from, "$$$")
+		for i := 0; i < len(pf); i++ {
+			fmt.Print(pf[i] + " ")
+		}
+	}
+
+	fmt.Println("\n//播放列表(vod_play_url)")
+	if vod_play_url == "" {
+		fmt.Println("未定义")
+		os.Exit(0)
+	} else {
+		pf := strings.Split(vod_play_from, "$$$")
+		urls := strings.Split(vod_play_url, "$$$")
+		for i := 0; i < len(pf); i++ {
+
+			u := strings.Split(urls[i], "#")
+			for j := 0; j < len(u); j++ {
+				if i == test_vod_from_index && j == 0 {
+					flag = pf[i]
+					uid = strings.Split(u[j], "$")[1]
+
+				}
+				fmt.Println(pf[i] + "-->" + strings.Split(u[j], "$")[0] + "[" + strings.Split(u[j], "$")[1] + "]")
+			}
+
+		}
+
+	}
+	return flag, uid
 }
 
 func main() {
