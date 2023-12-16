@@ -200,4 +200,4 @@ def GetTXFiltter():
 # homeContent(True)
 # categoryContent("TX",2,True,'{"iyear":"1"}')
 # searchContent("汪汪")
-detailContent("131009")
+# detailContent("131009")
