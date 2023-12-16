@@ -140,7 +140,20 @@ def searchContent(key):
     jstr=json.dumps(result,ensure_ascii=False)
     print(jstr)
 def playerContent(flag ,id):
-    print("{}")
+    ti=GetTime()
+    
+    res_content=requests.get(id,headers=GetNGHeaders(ti)).text
+    json_res=json.loads(res_content)
+    result={
+        "parse":0,
+        "header":json_res["data"]["header"],
+        "url":json_res["data"]["url"]
+
+            }
+    jstr=json.dumps(result,ensure_ascii=False)
+    print(jstr)
+
+
     # homeContent(True)
 
 
@@ -199,9 +212,4 @@ def GetTXFiltter():
 
     # jstr=json.dumps(TX,ensure_ascii=False)
     return TX
-    # print(jstr)
-# GetTXFiltter()
-# homeContent(True)
-# categoryContent("TX",2,True,'{"iyear":"1"}')
-# searchContent("汪汪")
-# detailContent("131009")
+

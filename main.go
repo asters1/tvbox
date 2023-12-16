@@ -182,11 +182,15 @@ func Go_SearchContent(etd *C.char, key *C.char, file_name *C.char) *C.char {
 	}
 }
 
-func Go_PlayerContent(etd string, flag string, id string, file_name string) string {
+func Go_PlayerContent(etd *C.char, flag *C.char, id *C.char, file_name *C.char) *C.char {
+	c_etd := C.GoString(etd)
+	c_flag := C.GoString(flag)
+	c_id := C.GoString(id)
+	c_file_name := C.GoString(file_name)
 	M := make(map[string]interface{})
-	head, file_name := filepath.Split(file_name)
-	File_Name_Remove_py := strings.TrimSuffix(file_name, ".py")
-	cmd := exec.Command("python3", "-c", "import sys;sys.path.append(\""+head+"\");from "+File_Name_Remove_py+" import playerContent,init;init(\""+etd+"\");playerContent(\""+flag+"\",\""+id+"\")")
+	head, c_file_name := filepath.Split(c_file_name)
+	File_Name_Remove_py := strings.TrimSuffix(c_file_name, ".py")
+	cmd := exec.Command("python3", "-c", "import sys;sys.path.append(\""+head+"\");from "+File_Name_Remove_py+" import playerContent,init;init(\""+c_etd+"\");playerContent(\""+c_flag+"\",\""+c_id+"\")")
 	content, err := cmd.Output()
 	if err != nil {
 		M["code"] = 0
@@ -201,9 +205,9 @@ func Go_PlayerContent(etd string, flag string, id string, file_name string) stri
 	}
 	jstr, err := json.Marshal(M)
 	if err != nil {
-		return "{\"code\":0,\"message\":\"格式化json出错，请检查!!!函数名为Go_PlayerContent!!\",\"data\":\"\"}"
+		return C.CString("{\"code\":0,\"message\":\"格式化json出错，请检查!!!函数名为Go_PlayerContent!!\",\"data\":\"\"}")
 	} else {
-		return string(jstr)
+		return C.CString(string(jstr))
 	}
 }
 
@@ -557,7 +561,44 @@ func debug_detailContent(ids string, file_path string) (string, string) {
 		}
 
 	}
+	fmt.Println("\n测试源为:" + flag)
+	fmt.Println("\n测试URL为:" + uid)
 	return flag, uid
+}
+
+func debug_playerContent(flag string, uid string, file_path string) {
+	res_playerContent := C.GoString(Go_PlayerContent(C.CString(extend), C.CString(flag), C.CString(uid), C.CString(file_path)))
+	fmt.Println("\n==========playerContent:=======\n")
+	res_data := gjson.Get(res_playerContent, "data").String()
+	if res_data == "" {
+		fmt.Println("playerContent返回为空")
+		os.Exit(0)
+	}
+	fmt.Println("\n//播放方式(parse)")
+	parse := gjson.Get(res_data, "parse").String()
+	if parse == "" {
+		fmt.Println("未定义")
+	} else {
+		if parse == "0" {
+			fmt.Println("直接播放")
+		} else if parse == "1" {
+			fmt.Println("嗅探播放")
+		}
+	}
+	fmt.Println("\n//播放URL(url)")
+	url := gjson.Get(res_data, "url").String()
+	if url == "" {
+		fmt.Println("未定义")
+	} else {
+		fmt.Println(url)
+	}
+	fmt.Println("\n//播放的Header(header)")
+	header := gjson.Get(res_data, "header").String()
+	if header == "" {
+		fmt.Println("未定义")
+	} else {
+		fmt.Println(header)
+	}
 }
 
 func main() {
@@ -578,6 +619,7 @@ func main() {
 		ids = debug_categoryContent(tid, test_category_page, json_filter, file_path)
 
 	}
-	debug_detailContent(ids, file_path)
+	flag, uid := debug_detailContent(ids, file_path)
+	debug_playerContent(flag, uid, file_path)
 	fmt.Println("\n")
 }
