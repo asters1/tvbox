@@ -1,3 +1,23 @@
+// func C.CString(string) *C.char              //go字符串转化为char*
+// func C.CBytes([]byte) unsafe.Pointer        // go 切片转化为指针
+// func C.GoString(*C.char) string             //C字符串 转化为 go字符串
+// func C.GoStringN(*C.char, C.int) string
+// func C.GoBytes(unsafe.Pointer, C.int) []byte
+
+// C 语言类型                 CGO 类型      Go语言类型
+// char                       C.char        byte
+// singed char                C.schar       int8
+// unsigned char              C.uchar       uint8
+// short                      C.short       int16
+// unsigned short             C.ushort      uint16
+// int                        C.int         int32
+// unsigned int               C.uint        uint32
+// unsigned long	            C.ulong	     uint32
+// long long int	            C.longlong	   int64
+// unsigned long long int     C.ulonglong   uint64
+// float                      C.float       float32
+// double                     C.double      float64
+// size_t                     C.size_t      uint
 package main
 
 import (
@@ -10,6 +30,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/gin-gonic/gin"
 	"github.com/go-yaml/yaml"
 	"github.com/tidwall/gjson"
 )
@@ -31,7 +52,25 @@ var (
 	test_vod_from_index int
 )
 
-// 检查python环境
+//路由
+//export Go_Gin
+func Go_Gin(port *C.char) {
+	c_port := C.GoString(port)
+	// 创建一个默认的路由引擎
+	r := gin.Default()
+	r.GET("/hello", func(c *gin.Context) {
+		// c.JSON：返回JSON格式的数据
+		c.JSON(200, gin.H{
+			"message": "Hello world!",
+		})
+	})
+	// 启动HTTP服务，默认在0.0.0.0:8080启动服务
+	r.Run(":" + c_port)
+
+}
+
+// 检查环境
+//export Go_Init
 func Go_Init() string {
 	M := make(map[string]interface{})
 	cmd := exec.Command("python3", "--version")
@@ -54,7 +93,6 @@ func Go_Init() string {
 }
 
 // 解析homeContent
-//
 //export Go_HomeContent
 func Go_HomeContent(etd *C.char, filter bool, file_name *C.char) *C.char {
 	c_etd := C.GoString(etd)
@@ -91,6 +129,7 @@ func Go_HomeContent(etd *C.char, filter bool, file_name *C.char) *C.char {
 	}
 }
 
+//export Go_CategoryContent
 func Go_CategoryContent(etd *C.char, tid *C.char, pg *C.char, filter bool, extend *C.char, file_name *C.char) *C.char {
 	c_etd := C.GoString(etd)
 	c_tid := C.GoString(tid)
@@ -126,6 +165,7 @@ func Go_CategoryContent(etd *C.char, tid *C.char, pg *C.char, filter bool, exten
 	}
 }
 
+//export Go_DetailContent
 func Go_DetailContent(etd *C.char, ids *C.char, file_name *C.char) *C.char {
 	c_etd := C.GoString(etd)
 	c_ids := C.GoString(ids)
@@ -154,6 +194,7 @@ func Go_DetailContent(etd *C.char, ids *C.char, file_name *C.char) *C.char {
 	}
 }
 
+//export Go_SearchContent
 func Go_SearchContent(etd *C.char, key *C.char, file_name *C.char) *C.char {
 	c_etd := C.GoString(etd)
 	c_key := C.GoString(key)
@@ -182,6 +223,7 @@ func Go_SearchContent(etd *C.char, key *C.char, file_name *C.char) *C.char {
 	}
 }
 
+//export Go_PlayerContent
 func Go_PlayerContent(etd *C.char, flag *C.char, id *C.char, file_name *C.char) *C.char {
 	c_etd := C.GoString(etd)
 	c_flag := C.GoString(flag)
