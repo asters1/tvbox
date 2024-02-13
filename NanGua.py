@@ -150,6 +150,8 @@ def playerContent(flag ,id):
         "url":json_res["data"]["url"]
 
             }
+    # r=requests.get(json_res["data"]["url"],{})
+    # print(r)
     jstr=json.dumps(result,ensure_ascii=False)
     print(jstr)
 
@@ -213,4 +215,4 @@ def GetTXFiltter():
     # jstr=json.dumps(TX,ensure_ascii=False)
     return TX
 
-categoryContent("TX","1",True,"")
+# categoryContent("TX","1",True,"")

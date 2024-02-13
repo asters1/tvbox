@@ -192,6 +192,7 @@ func Go_PlayerContent(etd *C.char, flag *C.char, id *C.char, file_name *C.char) 
 	File_Name_Remove_py := strings.TrimSuffix(c_file_name, ".py")
 	cmd := exec.Command("python3", "-c", "import sys;sys.path.append(\""+head+"\");from "+File_Name_Remove_py+" import playerContent,init;init(\""+c_etd+"\");playerContent(\""+c_flag+"\",\""+c_id+"\")")
 	content, err := cmd.Output()
+	// fmt.Println(string(content))
 	if err != nil {
 		M["code"] = 0
 		M["message"] = "playerContent运行出错，请检查!!!"
